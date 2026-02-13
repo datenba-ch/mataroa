@@ -21,7 +21,16 @@ services:
     environment:
       DEBUG: 1
       LOCALDEV: 1
+      DOMAIN: "127.0.0.1.nip.io:8000"
       DATABASE_URL: postgres://postgres:postgres@db:5432/postgres
+      OIDC_ENABLED: 1
+      OIDC_CLIENT_ID: mataroa-client
+      OIDC_CLIENT_SECRET: dummy-secret
+      OIDC_AUTHORIZATION_ENDPOINT: https://authentik.example.com/application/o/authorize/
+      OIDC_TOKEN_ENDPOINT: https://authentik.example.com/application/o/token/
+      OIDC_USERINFO_ENDPOINT: https://authentik.example.com/application/o/userinfo/
+      OIDC_JWKS_ENDPOINT: https://authentik.example.com/application/o/mataroa/jwks/
+      OIDC_PROVIDER_NAME: Authentik
     volumes:
       - .:/app
     ports:

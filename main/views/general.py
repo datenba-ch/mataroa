@@ -1502,3 +1502,46 @@ def guides_post_by_email(request):
             "canonical_host": settings.CANONICAL_HOST,
         },
     )
+
+
+# OIDC connection management views
+
+
+@login_required
+def oidc_connections_list(request):
+    """List all OIDC connections for the current user."""
+    connections = models.OIDCConnection.objects.filter(user=request.user)
+    has_usable_password = request.user.has_usable_password()
+
+    return render(
+        request,
+        "main/oidc_connections.html",
+        {
+            "connections": connections,
+            "has_usable_password": has_usable_password,
+        },
+    )
+
+
+@login_required
+@require_POST
+def oidc_connection_delete(request, pk):
+    """Delete an OIDC connection."""
+    connection = get_object_or_404(models.OIDCConnection, pk=pk, user=request.user)
+
+    # Check if user has other auth methods before allowing deletion
+    has_usable_password = request.user.has_usable_password()
+    connection_count = models.OIDCConnection.objects.filter(user=request.user).count()
+
+    # Prevent deletion if this is the last auth method
+    if not has_usable_password and connection_count <= 1:
+        messages.error(
+            request,
+            "Cannot remove your last login method. Please set a password first or link another SSO account.",
+        )
+        return redirect("oidc_connections_list")
+
+    issuer = connection.issuer
+    connection.delete()
+    messages.success(request, f"Disconnected from {issuer}")
+    return redirect("oidc_connections_list")

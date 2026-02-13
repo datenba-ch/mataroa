@@ -19,6 +19,13 @@
 
     <h1>Log in</h1>
 
+    {% if oidc_enabled %}
+    <p>
+        <a href="{% url 'oidc_authentication_init' %}" class="button">Log in with {{ oidc_provider_name }}</a>
+    </p>
+    <p style="text-align: center; margin: 1em 0;">or</p>
+    {% endif %}
+
     <form method="post">
         {{ form.non_field_errors }}
 

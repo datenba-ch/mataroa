@@ -50,6 +50,9 @@
     <div class="dashboard-list">
         <a href="{% url 'user_update' %}">Blog settings</a>
         <br><a href="{% url 'password_change' %}">Change password</a>
+        {% if oidc_enabled %}
+        <br><a href="{% url 'oidc_connections_list' %}">SSO Connections</a>
+        {% endif %}
         <br><a href="{% url 'methodology' %}">Methodology</a>
         <br><a href="{% url 'transparency' %}">Business Transparency</a>
         <br><a href="mailto:admin@mataroa.blog">Help and support</a>

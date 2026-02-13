@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
 
@@ -44,7 +45,24 @@ urlpatterns += [
     path("accounts/edit/", general.UserUpdate.as_view(), name="user_update"),
     path("accounts/delete/", general.UserDelete.as_view(), name="user_delete"),
     path("accounts/domain/", general.domain_check, name="domain_check"),
+    # OIDC connection management
+    path(
+        "accounts/oidc/connections/",
+        general.oidc_connections_list,
+        name="oidc_connections_list",
+    ),
+    path(
+        "accounts/oidc/connections/<int:pk>/delete/",
+        general.oidc_connection_delete,
+        name="oidc_connection_delete",
+    ),
 ]
+
+# OIDC authentication (mozilla-django-oidc routes)
+if getattr(settings, "OIDC_ENABLED", False):
+    urlpatterns += [
+        path("accounts/oidc/", include("mozilla_django_oidc.urls")),
+    ]
 
 # moderation
 urlpatterns += [

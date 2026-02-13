@@ -1,0 +1,70 @@
+{% extends 'main/layout.html' %}
+
+{% block title %}SSO Connections — {{ request.user.username }}{% endblock %}
+
+{% block content %}
+<main>
+    <h1>SSO Connections</h1>
+
+    <p>
+        Manage your Single Sign-On (SSO) connections. These allow you to log in using external identity providers.
+    </p>
+
+    {% if connections %}
+    <table>
+        <thead>
+            <tr>
+                <th>Provider</th>
+                <th>Email</th>
+                <th>Connected</th>
+                <th>Last Login</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for connection in connections %}
+            <tr>
+                <td>{{ connection.issuer }}</td>
+                <td>{{ connection.email|default:"-" }}</td>
+                <td>{{ connection.created_at|date:"F j, Y" }}</td>
+                <td>{{ connection.last_login_at|date:"F j, Y"|default:"Never" }}</td>
+                <td>
+                    <form method="post" action="{% url 'oidc_connection_delete' connection.pk %}" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="submit" value="Disconnect" class="type-danger"
+                            {% if not has_usable_password and connections|length == 1 %}
+                            disabled title="Cannot remove your last login method"
+                            {% endif %}
+                        >
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>
+        <em>No SSO connections linked to your account.</em>
+    </p>
+    {% endif %}
+
+    {% if oidc_enabled %}
+    <h2>Add Connection</h2>
+    <p>
+        <a href="{% url 'oidc_authentication_init' %}">Connect with {{ oidc_provider_name }}</a>
+    </p>
+    {% endif %}
+
+    {% if not has_usable_password and connections|length == 1 %}
+    <p class="alert-warning">
+        <strong>Note:</strong> You cannot disconnect your last SSO connection without first
+        <a href="{% url 'password_change' %}">setting a password</a>.
+    </p>
+    {% endif %}
+
+    <p>
+        <br>
+        <a href="{% url 'dashboard' %}">Back to Dashboard</a>
+    </p>
+</main>
+{% endblock content %}
