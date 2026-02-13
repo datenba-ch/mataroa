@@ -50,10 +50,13 @@ class MataroaOIDCAuthenticationBackend(OIDCAuthenticationBackend):
             pass
 
         # Fall back to email matching for account linking
+        # Only auto-link if exactly one user has this email to prevent:
+        # - Logging into wrong account when emails are duplicated
+        # - Account-link preemption attacks
         if email:
             users = list(User.objects.filter(email__iexact=email))
-            if users:
-                # Create OIDCConnection for existing user (account linking)
+            if len(users) == 1:
+                # Exactly one user with this email - safe to auto-link
                 user = users[0]
                 OIDCConnection.objects.create(
                     user=user,
@@ -63,6 +66,8 @@ class MataroaOIDCAuthenticationBackend(OIDCAuthenticationBackend):
                     last_login_at=timezone.now(),
                 )
                 return [user]
+            # If multiple users share this email, don't auto-link
+            # A new account will be created instead
 
         return self.UserModel.objects.none()
 
