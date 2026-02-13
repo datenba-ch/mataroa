@@ -38,7 +38,9 @@ def host_middleware(get_response):
             # e.g., "test.127.0.0.1.nip.io:8000" -> subdomain = "test"
             # e.g., "127.0.0.1.nip.io:8000" -> no subdomain (main site)
             host_without_port = host.split(":")[0]
-            if host_without_port.startswith("127.0.0.1.") or host_without_port.startswith("localhost."):
+            if host_without_port.startswith(
+                "127.0.0.1."
+            ) or host_without_port.startswith("localhost."):
                 # No subdomain - main site access
                 if request.user.is_authenticated:
                     request.theme_zialucia = request.user.theme_zialucia
@@ -47,14 +49,19 @@ def host_middleware(get_response):
             else:
                 # Has subdomain - extract it (everything before .127.0.0.1 or .localhost)
                 subdomain = host_without_port.split(".")[0]
-                if subdomain and models.User.objects.filter(username=subdomain).exists():
+                if (
+                    subdomain
+                    and models.User.objects.filter(username=subdomain).exists()
+                ):
                     request.subdomain = subdomain
                     request.blog_user = models.User.objects.get(username=subdomain)
                     request.theme_zialucia = request.blog_user.theme_zialucia
                     request.theme_sansserif = request.blog_user.theme_sansserif
                     return get_response(request)
                 elif subdomain in denylist.DISALLOWED_USERNAMES:
-                    return redirect(f"http://127.0.0.1.nip.io:{host.split(':')[1] if ':' in host else '8000'}/")
+                    return redirect(
+                        f"http://127.0.0.1.nip.io:{host.split(':')[1] if ':' in host else '8000'}/"
+                    )
                 else:
                     raise Http404()
 

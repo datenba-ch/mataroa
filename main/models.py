@@ -466,10 +466,18 @@ class Onboard(models.Model):
 class OIDCConnection(models.Model):
     """Stores the link between a local User and an OIDC provider identity."""
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="oidc_connections")
-    issuer = models.URLField(help_text="OIDC provider issuer URL, e.g., https://accounts.google.com")
-    subject = models.CharField(max_length=255, help_text="The 'sub' claim - unique user ID from the provider")
-    email = models.EmailField(blank=True, null=True, help_text="Email from the OIDC provider at time of login")
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="oidc_connections"
+    )
+    issuer = models.URLField(
+        help_text="OIDC provider issuer URL, e.g., https://accounts.google.com"
+    )
+    subject = models.CharField(
+        max_length=255, help_text="The 'sub' claim - unique user ID from the provider"
+    )
+    email = models.EmailField(
+        blank=True, null=True, help_text="Email from the OIDC provider at time of login"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     last_login_at = models.DateTimeField(blank=True, null=True)
 

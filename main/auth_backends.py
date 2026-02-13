@@ -95,7 +95,10 @@ class MataroaOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         # Check if username is in denylist or already exists
         base_username = username
         counter = 1
-        while denylist.is_disallowed(username) or User.objects.filter(username=username).exists():
+        while (
+            denylist.is_disallowed(username)
+            or User.objects.filter(username=username).exists()
+        ):
             username = f"{base_username}-{counter}"
             counter += 1
             # Safety check to prevent infinite loop

@@ -1527,9 +1527,7 @@ def oidc_connections_list(request):
 @require_POST
 def oidc_connection_delete(request, pk):
     """Delete an OIDC connection."""
-    connection = get_object_or_404(
-        models.OIDCConnection, pk=pk, user=request.user
-    )
+    connection = get_object_or_404(models.OIDCConnection, pk=pk, user=request.user)
 
     # Check if user has other auth methods before allowing deletion
     has_usable_password = request.user.has_usable_password()
