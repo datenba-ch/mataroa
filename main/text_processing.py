@@ -191,3 +191,33 @@ def generate_markdown_export(user_id):
 def escape_quotes(input_string):
     output_string = input_string.replace('"', '\\"')
     return output_string
+
+
+def slugify_username(raw_username):
+    """
+    Convert a raw username (from OIDC preferred_username or email prefix) into
+    a valid Mataroa username.
+
+    Rules:
+    - Lowercase alphanumeric characters and hyphens only
+    - No leading underscores or hyphens
+    - Max 150 characters
+    - If result is empty, returns None
+    """
+    if not raw_username:
+        return None
+
+    # Use Django's slugify to handle most of the work
+    username = slugify(raw_username)
+
+    # Remove any leading hyphens or underscores
+    username = username.lstrip("-_")
+
+    # Truncate to max length
+    username = username[:150]
+
+    # Return None if empty after processing
+    if not username:
+        return None
+
+    return username

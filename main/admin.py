@@ -212,3 +212,20 @@ class OnboardAdmin(admin.ModelAdmin):
         "created_at",
     )
     ordering = ["-id"]
+
+
+@admin.register(models.OIDCConnection)
+class OIDCConnectionAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "user",
+        "issuer",
+        "subject",
+        "email",
+        "created_at",
+        "last_login_at",
+    )
+    list_display_links = ("id", "user")
+    list_filter = ("issuer",)
+    search_fields = ("user__username", "user__email", "email", "subject", "issuer")
+    ordering = ["-id"]

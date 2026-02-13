@@ -23,6 +23,41 @@ def host_middleware(get_response):
         ):
             return get_response(request)
 
+        # LOCALDEV: allow direct localhost/127.0.0.1 access
+        if settings.LOCALDEV and (
+            host.startswith("localhost:") or host.startswith("127.0.0.1:")
+        ):
+            if request.user.is_authenticated:
+                request.theme_zialucia = request.user.theme_zialucia
+                request.theme_sansserif = request.user.theme_sansserif
+            return get_response(request)
+
+        # LOCALDEV: handle nip.io/sslip.io subdomains (e.g., username.127.0.0.1.nip.io:8000)
+        if settings.LOCALDEV and (".nip.io" in host or ".sslip.io" in host):
+            # Extract subdomain: first part before the IP address
+            # e.g., "test.127.0.0.1.nip.io:8000" -> subdomain = "test"
+            # e.g., "127.0.0.1.nip.io:8000" -> no subdomain (main site)
+            host_without_port = host.split(":")[0]
+            if host_without_port.startswith("127.0.0.1.") or host_without_port.startswith("localhost."):
+                # No subdomain - main site access
+                if request.user.is_authenticated:
+                    request.theme_zialucia = request.user.theme_zialucia
+                    request.theme_sansserif = request.user.theme_sansserif
+                return get_response(request)
+            else:
+                # Has subdomain - extract it (everything before .127.0.0.1 or .localhost)
+                subdomain = host_without_port.split(".")[0]
+                if subdomain and models.User.objects.filter(username=subdomain).exists():
+                    request.subdomain = subdomain
+                    request.blog_user = models.User.objects.get(username=subdomain)
+                    request.theme_zialucia = request.blog_user.theme_zialucia
+                    request.theme_sansserif = request.blog_user.theme_sansserif
+                    return get_response(request)
+                elif subdomain in denylist.DISALLOWED_USERNAMES:
+                    return redirect(f"http://127.0.0.1.nip.io:{host.split(':')[1] if ':' in host else '8000'}/")
+                else:
+                    raise Http404()
+
         host_parts = host.split(".")
         canonical_parts = settings.CANONICAL_HOST.split(".")
 

@@ -40,7 +40,7 @@ ALLOWED_HOSTS = [
 ADMINS = [os.getenv("ADMIN_EMAIL")] if os.getenv("ADMIN_EMAIL") else []
 
 CANONICAL_HOST = os.getenv("DOMAIN", "mataroa.blog")
-if LOCALDEV:
+if LOCALDEV and not os.getenv("DOMAIN"):
     CANONICAL_HOST = "mataroalocal.blog:8000"
 
 CUSTOM_DOMAIN_IP = os.getenv("CUSTOM_DOMAIN_IP")
@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sitemaps",
     "django.contrib.humanize",
+    "mozilla_django_oidc",
 ]
 
 MIDDLEWARE = [
@@ -84,6 +85,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "main.context_processors.oidc_settings",
             ],
         },
     },
@@ -93,11 +95,17 @@ WSGI_APPLICATION = "mataroa.wsgi.application"
 
 AUTH_USER_MODEL = "main.User"
 
+AUTHENTICATION_BACKENDS = [
+    "main.auth_backends.MataroaOIDCAuthenticationBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
 LOGIN_REDIRECT_URL = "index"
 LOGOUT_REDIRECT_URL = "index"
 
 SESSION_COOKIE_AGE = 31449600  # 60 * 60 * 24 * 7 * 52 = 1 year in seconds
-SESSION_COOKIE_DOMAIN = CANONICAL_HOST.split(":")[0]  # session visible in subdomains
+# In LOCALDEV, don't set cookie domain to allow localhost and nip.io to work
+SESSION_COOKIE_DOMAIN = None if LOCALDEV else CANONICAL_HOST.split(":")[0]
 
 DATE_FORMAT = "F j, Y"
 DATETIME_FORMAT = "F j, Y, P"
@@ -276,3 +284,17 @@ LOGGING = {
         },
     },
 }
+
+
+# OpenID Connect (OIDC) Authentication
+# https://mozilla-django-oidc.readthedocs.io/
+
+OIDC_ENABLED = os.getenv("OIDC_ENABLED", "0") == "1"
+OIDC_RP_CLIENT_ID = os.getenv("OIDC_CLIENT_ID", "")
+OIDC_RP_CLIENT_SECRET = os.getenv("OIDC_CLIENT_SECRET", "")
+OIDC_OP_AUTHORIZATION_ENDPOINT = os.getenv("OIDC_AUTHORIZATION_ENDPOINT", "")
+OIDC_OP_TOKEN_ENDPOINT = os.getenv("OIDC_TOKEN_ENDPOINT", "")
+OIDC_OP_USER_ENDPOINT = os.getenv("OIDC_USERINFO_ENDPOINT", "")
+OIDC_OP_JWKS_ENDPOINT = os.getenv("OIDC_JWKS_ENDPOINT", "")
+OIDC_PROVIDER_NAME = os.getenv("OIDC_PROVIDER_NAME", "Single Sign-On")
+OIDC_RP_SIGN_ALGO = os.getenv("OIDC_SIGN_ALGO", "RS256")
